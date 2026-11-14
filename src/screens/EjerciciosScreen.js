@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import {
   StyleSheet,
   Text,
@@ -8,9 +8,11 @@ import {
   Alert,
   Modal,
   TextInput,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
+import { useVideoPlayer, VideoView } from 'expo-video';
 import Rutina from '../models/Rutina';
 import { ejerciciosPorZona, zonas, buscarPorId } from '../data/ejercicios';
 import {
@@ -19,6 +21,79 @@ import {
   guardarRutina,
   borrarRutina,
 } from '../services/rutinasStorage';
+import { obtenerVideoDeYouTube } from '../services/youtubeService'; // 👈 Importa la YouTube Data API
+
+// Componente auxiliar para el detalle, consulta de YouTube y reproductor expo-video
+function DetalleEjercicioModal({ ejercicio, onClose }) {
+  const [infoYoutube, setInfoYoutube] = useState(null);
+  const [cargando, setCargando] = useState(true);
+  
+  // Reproductor multimedia oficial de expo-video
+  const videoSource = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
+  const player = useVideoPlayer(videoSource, (player) => {
+    player.loop = true;
+    //player.play();
+  });
+
+  useEffect(() => {
+    async function cargarDatosYoutube() {
+      if (ejercicio) {
+        setCargando(true);
+        const resultado = await obtenerVideoDeYouTube(ejercicio.nombre);
+        setInfoYoutube(resultado);
+        setCargando(false);
+      }
+    }
+    cargarDatosYoutube();
+  }, [ejercicio]);
+
+  if (!ejercicio) return null;
+
+  return (
+    <Modal visible={true} animationType="slide" onRequestClose={onClose}>
+      <SafeAreaView style={styles.modal}>
+        <View style={styles.modalHeader}>
+          <TouchableOpacity onPress={onClose} style={styles.cerrarBoton}>
+            <Text style={styles.cerrarTexto}>✕</Text>
+          </TouchableOpacity>
+          <Text style={styles.modalTitulo}>{ejercicio.nombre}</Text>
+        </View>
+
+        <ScrollView contentContainerStyle={{ paddingBottom: 24 }}>
+          {/* Reproductor oficial de expo-video */}
+          <VideoView
+            style={styles.video}
+            player={player}
+            allowsFullscreen
+            allowsPictureInPicture
+          />
+
+          <View style={{ paddingHorizontal: 16, marginTop: 16 }}>
+            <Text style={styles.detalleSubTitulo}>🎬 Tutorial sincronizado (YouTube API):</Text>
+            {cargando ? (
+              <ActivityIndicator size="small" color="#FF5722" style={{ marginVertical: 10 }} />
+            ) : infoYoutube ? (
+              <View style={styles.youtubeCard}>
+                <Text style={styles.youtubeTitle}>{infoYoutube.titulo}</Text>
+                <Text style={styles.youtubeDesc} numberOfLines={2}>{infoYoutube.descripcion}</Text>
+              </View>
+            ) : (
+              <Text style={styles.detalleTexto}>No se encontró información en línea.</Text>
+            )}
+
+            <Text style={[styles.detalleSubTitulo, { marginTop: 16 }]}>Instrucciones / Descripción:</Text>
+            <Text style={styles.detalleTexto}>{ejercicio.detalle()}</Text>
+            
+            <View style={styles.infoBadgeContainer}>
+              <Text style={styles.infoBadge}>📊 Nivel: {ejercicio.nivel}</Text>
+              <Text style={styles.infoBadge}>⏱️ Duración: ~{ejercicio.tiempoEstimado} min</Text>
+            </View>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    </Modal>
+  );
+}
 
 export default function EjerciciosScreen() {
   const [seccion, setSeccion] = useState('ejercicios'); // 'ejercicios' | 'rutinas'
@@ -28,10 +103,13 @@ export default function EjerciciosScreen() {
   const [rutinas, setRutinas] = useState([]);
   const [idsUsuario, setIdsUsuario] = useState([]);
 
+  // Estado para el modal de detalle del ejercicio seleccionado
+  const [ejercicioSeleccionado, setEjercicioSeleccionado] = useState(null);
+
   // Creación de rutina
   const [modalVisible, setModalVisible] = useState(false);
   const [nombre, setNombre] = useState('');
-  const [seleccion, setSeleccion] = useState([]); // ids de ejercicios, en el orden en que se eligen
+  const [seleccion, setSeleccion] = useState([]); // ids de ejercicios
 
   const cargarRutinas = useCallback(async () => {
     const [todas, propias] = await Promise.all([listarRutinas(), listarRutinasGuardadas()]);
@@ -135,7 +213,7 @@ export default function EjerciciosScreen() {
                     <TouchableOpacity
                       key={ej.id}
                       style={styles.ejercicioItem}
-                      onPress={() => Alert.alert(ej.nombre, ej.detalle())}
+                      onPress={() => setEjercicioSeleccionado(ej)}
                     >
                       <Text style={styles.ejercicioText}>• {ej.nombre}</Text>
                       <Text style={styles.ejercicioSub}>
@@ -179,6 +257,12 @@ export default function EjerciciosScreen() {
       <TouchableOpacity style={styles.fab} onPress={abrirModal} activeOpacity={0.85}>
         <Text style={styles.fabTexto}>+</Text>
       </TouchableOpacity>
+
+      {/* Modal de Detalle con YouTube API y expo-video */}
+      <DetalleEjercicioModal
+        ejercicio={ejercicioSeleccionado}
+        onClose={() => setEjercicioSeleccionado(null)}
+      />
 
       {/* Crear rutina: escoger ejercicios */}
       <Modal visible={modalVisible} animationType="slide" onRequestClose={() => setModalVisible(false)}>
@@ -298,6 +382,19 @@ const styles = StyleSheet.create({
   cerrarBoton: { padding: 8, marginRight: 8 },
   cerrarTexto: { color: '#FFFFFF', fontSize: 20 },
   modalTitulo: { color: '#FFFFFF', fontSize: 20, fontWeight: 'bold' },
+  
+  // Estilos de video
+  video: { width: '100%', height: 230, borderRadius: 12, backgroundColor: '#000' },
+  detalleSubTitulo: { color: '#FFFFFF', fontSize: 16, fontWeight: 'bold', marginBottom: 6 },
+  detalleTexto: { color: '#D1D5DB', fontSize: 15, lineHeight: 22, marginBottom: 16 },
+  infoBadgeContainer: { flexDirection: 'row', justifyContent: 'space-between', backgroundColor: '#1E222B', padding: 12, borderRadius: 10, borderWidth: 1, borderColor: '#2A303C' },
+  infoBadge: { color: '#9CA3AF', fontSize: 13, fontWeight: 'bold' },
+
+  // Estilos de la tarjeta de YouTube API
+  youtubeCard: { backgroundColor: '#1E222B', padding: 12, borderRadius: 10, borderWidth: 1, borderColor: '#2A303C', marginTop: 6 },
+  youtubeTitle: { color: '#FFFFFF', fontWeight: 'bold', fontSize: 14, marginBottom: 4 },
+  youtubeDesc: { color: '#9CA3AF', fontSize: 12 },
+
   input: { backgroundColor: '#1E222B', borderWidth: 1, borderColor: '#2A303C', borderRadius: 10, color: '#FFFFFF', paddingHorizontal: 12, paddingVertical: 12, fontSize: 16 },
   ayuda: { color: '#9CA3AF', fontSize: 13, marginTop: 10, marginBottom: 4 },
   zonaTitulo: { color: '#FF5722', fontWeight: 'bold', fontSize: 15, marginTop: 16, marginBottom: 8 },
