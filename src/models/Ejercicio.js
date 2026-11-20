@@ -34,6 +34,7 @@ export default class Ejercicio {
     segundosPorRep = 4,    // duración promedio de una repetición
     met = 5,               // intensidad (MET): kcal por kg de peso por hora
     descripcion = '',
+    videoUrl = null,
   } = {}) {
     if (!id) throw new Error('El ejercicio necesita un "id"');
     if (!nombre) throw new Error('El ejercicio necesita un "nombre"');
@@ -53,6 +54,7 @@ export default class Ejercicio {
     this.segundosPorRep = numeroPositivo(segundosPorRep, 'segundosPorRep');
     this.met = numeroPositivo(met, 'met');
     this.descripcion = descripcion;
+    this.videoUrl = videoUrl;
   }
 
   // ---------- Tipo ----------
@@ -136,6 +138,7 @@ export default class Ejercicio {
       segundosPorRep: this.segundosPorRep,
       met: this.met,
       descripcion: this.descripcion,
+      videoUrl: this.videoUrl,
     };
   }
 }

@@ -21,18 +21,20 @@ import {
   guardarRutina,
   borrarRutina,
 } from '../services/rutinasStorage';
-import { obtenerVideoDeYouTube } from '../services/youtubeService'; // 👈 Importa la YouTube Data API
+import { obtenerVideoDeYouTube } from '../services/youtubeService'; // Importa la YouTube Data API
 
 // Componente auxiliar para el detalle, consulta de YouTube y reproductor expo-video
 function DetalleEjercicioModal({ ejercicio, onClose }) {
   const [infoYoutube, setInfoYoutube] = useState(null);
   const [cargando, setCargando] = useState(true);
   
-  // Reproductor multimedia oficial de expo-video
-  const videoSource = 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
+  // Reproductor multimedia oficial de expo-video con la URL específica del ejercicio
+  const videoSource = ejercicio?.videoUrl ?? null;
   const player = useVideoPlayer(videoSource, (player) => {
-    player.loop = true;
-    //player.play();
+    if (player) {
+      player.loop = true;
+      //player.play();
+    }
   });
 
   useEffect(() => {
@@ -69,7 +71,7 @@ function DetalleEjercicioModal({ ejercicio, onClose }) {
           />
 
           <View style={{ paddingHorizontal: 16, marginTop: 16 }}>
-            <Text style={styles.detalleSubTitulo}>🎬 Tutorial sincronizado (YouTube API):</Text>
+            <Text style={styles.detalleSubTitulo}>Tutorial Recomendado :</Text>
             {cargando ? (
               <ActivityIndicator size="small" color="#FF5722" style={{ marginVertical: 10 }} />
             ) : infoYoutube ? (
