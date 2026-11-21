@@ -7,7 +7,7 @@ const biceps = [
     zona: 'Bíceps', 
     equipo: 'Barra', 
     peso: 20,
-    videoUrl: '',
+    videoUrl: 'https://youtu.be/a9hli15uWiA',
   }),
 
   new EjercicioConPeso({ 
@@ -16,7 +16,7 @@ const biceps = [
     zona: 'Bíceps', 
     equipo: 'Mancuernas', 
     peso: 10,
-    videoUrl: '',
+    videoUrl: 'https://youtu.be/RHdacbwKbTo',
   }),
 
   new EjercicioConPeso({ 
@@ -26,7 +26,7 @@ const biceps = [
     equipo: 'Barra Z', 
     peso: 15, 
     nivel: 'Intermedio',
-    videoUrl: '',
+    videoUrl: 'https://youtu.be/Ks5KNBSmw6A',
   }),
 ];
 
