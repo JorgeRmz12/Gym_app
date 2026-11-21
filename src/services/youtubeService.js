@@ -10,7 +10,7 @@ export async function obtenerVideoDeYouTube(nombreEjercicio) {
     const response = await fetch(url);
     const data = await response.json();
 
-    // 🔍 Imprimimos la respuesta completa en la consola del navegador
+    // Imprimimos la respuesta completa en la consola del navegador
     console.log("Respuesta de YouTube:", data);
 
     if (data.error) {

@@ -5,7 +5,7 @@ import { rutinasPreestablecidas } from '../data/rutinas';
 
 const CLAVE = '@gymapp/rutinas';
 
-/** Rutinas creadas por el usuario (guardadas en el teléfono). */
+/** Rutinas creadas por el usuario (guardadas en el telefono). */
 export async function listarRutinasGuardadas() {
   const texto = await AsyncStorage.getItem(CLAVE);
   if (!texto) return [];

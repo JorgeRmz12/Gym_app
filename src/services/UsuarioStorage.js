@@ -4,12 +4,12 @@ import Usuario from '../models/Usuario';
 
 const CLAVE = '@gymapp/usuario';
 
-/** Guarda el usuario en el teléfono. */
+/** Guarda el usuario en el telefono. */
 export async function guardarUsuario(usuario) {
   await AsyncStorage.setItem(CLAVE, JSON.stringify(usuario));
 }
 
-/** Devuelve un Usuario, o null si aún no hay datos guardados. */
+/** Devuelve un Usuario, o null si aun no hay datos guardados. */
 export async function cargarUsuario() {
   const texto = await AsyncStorage.getItem(CLAVE);
   if (!texto) return null;
@@ -20,7 +20,7 @@ export async function cargarUsuario() {
   }
 }
 
-/** Borra los datos (por ejemplo, al cerrar sesión). */
+/** Borra los datos (por ejemplo, al cerrar sesion). */
 export async function borrarUsuario() {
   await AsyncStorage.removeItem(CLAVE);
 }
