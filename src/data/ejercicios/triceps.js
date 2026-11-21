@@ -8,7 +8,7 @@ const triceps = [
     zona: 'Tríceps', 
     equipo: 'Polea', 
     peso: 25,
-    repeticiones:'10',
+    repeticiones: 10,
     videoUrl: 'https://youtube.com/shorts/uvrH-ceZg_Q',
     descripcion:'',
   }),
@@ -34,7 +34,7 @@ const triceps = [
   }),
 
   new EjercicioPesoCorporal({ 
-    id: 'tri-03', 
+    id: 'tri-04', 
     nombre: 'Fondos en Paralelas', 
     zona: 'Tríceps', 
     repeticiones: 12,

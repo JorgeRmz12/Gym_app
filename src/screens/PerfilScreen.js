@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -7,60 +7,40 @@ import {
   ScrollView,
   Alert,
   TextInput,
-  ActivityIndicator,
 } from 'react-native';
-import Usuario from '../models/Usuario';
-import { cargarUsuario, guardarUsuario, borrarUsuario } from '../services/UsuarioStorage';
+import { guardarUsuario, borrarUsuario } from '../services/UsuarioStorage';
 
-// Datos iniciales la primera vez que se abre la app
-const crearUsuarioInicial = () =>
-  new Usuario({ nombre: 'Usuario Gym', edad: 25, estatura: 175, peso: 75, sexo: 'Masculino' });
-
-export default function PerfilScreen() {
-  const [usuario, setUsuario] = useState(null);
-  const [pesoTexto, setPesoTexto] = useState('');
-
-  useEffect(() => {
-    (async () => {
-      let guardado = await cargarUsuario();
-      if (!guardado) {
-        guardado = crearUsuarioInicial();
-        await guardarUsuario(guardado);
-      }
-      setUsuario(guardado);
-      setPesoTexto(String(guardado.peso));
-    })();
-  }, []);
+export default function PerfilScreen({ usuario, onUsuarioActualizado, onCerrarSesion }) {
+  const [pesoTexto, setPesoTexto] = useState(String(usuario.peso));
 
   const actualizarPeso = async () => {
-    const kg = parseFloat(pesoTexto.replace(',', '.'));
+    const kg = Number(pesoTexto.replace(',', '.'));
+    if (!Number.isFinite(kg) || kg <= 0) {
+      Alert.alert('Dato inválido', 'Escribe un peso válido en kg.');
+      setPesoTexto(String(usuario.peso));
+      return;
+    }
+
     try {
       const actualizado = usuario.clonar({ peso: kg });
-      setUsuario(actualizado);
       await guardarUsuario(actualizado);
+      onUsuarioActualizado(actualizado);
+      setPesoTexto(String(actualizado.peso));
       Alert.alert('Peso actualizado', `Ahora registras ${kg} kg.`);
-    } catch (error) {
-      Alert.alert('Dato inválido', 'Escribe un peso válido en kg.');
+    } catch {
+      Alert.alert('No se pudo actualizar el peso', 'Intenta guardar el cambio de nuevo.');
       setPesoTexto(String(usuario.peso));
     }
   };
 
   const cerrarSesion = async () => {
-    await borrarUsuario();
-    const nuevo = crearUsuarioInicial();
-    await guardarUsuario(nuevo);
-    setUsuario(nuevo);
-    setPesoTexto(String(nuevo.peso));
-    Alert.alert('Cerrar Sesión', 'Has salido de tu cuenta.');
+    try {
+      await borrarUsuario();
+      onCerrarSesion();
+    } catch {
+      Alert.alert('No se pudo cerrar sesión', 'Intenta de nuevo.');
+    }
   };
-
-  if (!usuario) {
-    return (
-      <View style={[styles.container, styles.centrado]}>
-        <ActivityIndicator size="large" color="#FF5722" />
-      </View>
-    );
-  }
 
   return (
     <ScrollView style={styles.container}>
